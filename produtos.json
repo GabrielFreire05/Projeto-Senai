@@ -1,0 +1,22 @@
+[
+    {
+        "id": 1,
+        "nome": "Alface Americano",
+        "preco": 10
+    },
+    {
+        "id": 2,
+        "nome": "Rucula",
+        "preco": 7.5
+    },
+    {
+        "id": 3,
+        "nome": "Big Mc",
+        "preco": 20
+    },
+    {
+        "id": 4,
+        "nome": "Mc Lanche Feliz",
+        "preco": 25.5
+    }
+]
