@@ -3,7 +3,6 @@ const app = express()
 const PORT = 8081
 const fs = require('fs')
 
-//middleware para interpretar JSON no corpo da requisiçao
 app.use(express.json())
 
 const CAMINHO_ARQUIVO = "./produtos.json"
@@ -21,9 +20,9 @@ app.post("/produtos", (req, res) => {
         }
 
         const data = fs.readFileSync(CAMINHO_ARQUIVO, 'utf-8')
-        let produtos = JSON.parse(data) // transformando o texto em objeto js
+        let produtos = JSON.parse(data)
 
-        //criando um novo projeto js
+       
         const novoProduto = {
             id: produtos.length + 1, 
             nome,
