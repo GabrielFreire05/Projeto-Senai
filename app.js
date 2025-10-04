@@ -1,51 +1,77 @@
-const express = require('express')
-const app = express()
-const PORT = 8081
-const fs = require('fs')
+const express = require('express');
+const fs = require('fs');
+const path = require('path');
 
-app.use(express.json())
+const app = express();
+const PORT = 3000;
 
-const CAMINHO_ARQUIVO = "./produtos.json"
+app.use(express.json());
 
-if (!fs.existsSync(CAMINHO_ARQUIVO)) {
-    fs.writeFileSync(CAMINHO_ARQUIVO, '[]')
+const livrosFilePath = path.join(__dirname, 'livros.json');
+
+if (!fs.existsSync(livrosFilePath)) {
+    fs.writeFileSync(livrosFilePath, '[]', 'utf8');
 }
 
-app.post("/produtos", (req, res) => {
+app.post('/livros', (req, res) => {
     try {
-        const { nome, preco } = req.body
+        const { titulo, autor, anoPublicacao, qtdExemplares } = req.body;
 
-        if (nome == "" || nome == undefined || preco == undefined || isNaN(preco)) {
-            return res.status(400).json({ message: "Campos obrigatorios nao preenchidos"})
+        if (!titulo || !autor || !anoPublicacao || !qtdExemplares) {
+            return res.status(400).json({ message: 'Todos os campos são obrigatórios.' });
         }
 
-        const data = fs.readFileSync(CAMINHO_ARQUIVO, 'utf-8')
-        let produtos = JSON.parse(data)
+        const data = fs.readFileSync(livrosFilePath, 'utf8');
+        const livros = JSON.parse(data);
 
-       
-        const novoProduto = {
-            id: produtos.length + 1, 
-            nome,
-            preco
-        }
+        const novoLivro = {
+            id: livros.length > 0 ? Math.max(...livros.map(l => l.id)) + 1 : 1,
+            titulo,
+            autor,
+            anoPublicacao,
+            qtdExemplares
+        };
 
-        produtos.push(novoProduto)
+        livros.push(novoLivro);
 
-        //adicionar ao arquivo .JSON
-        fs.writeFileSync(CAMINHO_ARQUIVO, JSON.stringify(produtos, null, 4))
+        fs.writeFileSync(livrosFilePath, JSON.stringify(livros, null, 2), 'utf8');
 
-        console.log(novoProduto)
-        
-        res.status(201).json({ 
-            message: `Produto cadastrado com sucesso`,
-            produto: novoProduto
-        })
+        res.status(201).json({ message: "Livro cadastrado com sucesso!", livro: novoLivro });
+
     } catch (error) {
-        console.error(`Erro ao cadastrar produto ${error}`)
-        res.status(500).json({ message: "Erro interno no servidor"})
+        res.status(500).json({ message: 'Erro interno do servidor.' });
     }
-})
+});
+
+app.get('/livros', (req, res) => {
+    try {
+        const data = fs.readFileSync(livrosFilePath, 'utf8');
+        const livros = JSON.parse(data);
+        res.status(200).json(livros);
+    } catch (error) {
+        res.status(500).json({ message: 'Erro interno do servidor.' });
+    }
+});
+
+app.get('/livros/:titulo', (req, res) => {
+    try {
+        const { titulo } = req.params;
+        const data = fs.readFileSync(livrosFilePath, 'utf8');
+        const livros = JSON.parse(data);
+
+        const livroEncontrado = livros.find(livro => livro.titulo.toLowerCase() === titulo.toLowerCase());
+
+        if (!livroEncontrado) {
+            return res.status(404).json({ message: 'Livro não encontrado.' });
+        }
+
+        res.status(200).json(livroEncontrado);
+
+    } catch (error) {
+        res.status(500).json({ message: 'Erro interno do servidor.' });
+    }
+});
 
 app.listen(PORT, () => {
-    console.log(`Servidor rodando em http://localhost:${PORT}`)
-})
+    console.log(`Servidor rodando em http://localhost:${PORT}`);
+});
