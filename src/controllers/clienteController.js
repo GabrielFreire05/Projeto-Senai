@@ -32,13 +32,19 @@ const clienteController = {
 
     criarCliente: async (req, res) => {
         try {
-            const { nomeCliente, cpfCliente} = req.body
+            const { nomeCliente, cpfCliente, emailCliente, senhaCliente} = req.body
 
-            if (nomeCliente == undefined || cpfCliente == undefined) {
+            if (nomeCliente == undefined || cpfCliente == undefined || emailCliente == undefined || senhaCliente == undefined) {
                 return res.status(400).json({
                     erro: 'Campos obrigatorios nao preenchidos'
                 })
             }
+            //Criptografar senha
+            const saltRounds = 10;
+
+            const senhaCriptografada = await bcrypt.hash(senhaCliente, saltRounds);
+            
+            await clienteModel.inserirCliente(nomeCliente, cpfCliente, emailCliente, senhaCriptografada);
 
             //verificar se o cpf ja existe no DB
             const clientes = await clienteModel.buscarPorCPF(cpfCliente)
