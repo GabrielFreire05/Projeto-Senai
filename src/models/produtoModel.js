@@ -1,54 +1,94 @@
+const { sql, getConnection } = require("../config/db")
 
-const {sql, getConnection} = require("../config/db")
+const produtoModel = {
+    buscarTodos: async() => {
+        try {
+            const pool = await getConnection() 
 
-const produtoModel = { 
-    buscarTodos: async ()=>{
-        try{
-            const pool = await getConnection();
+            let querySQL = "SELECT * FROM Produtos"
 
-            let querySQL = "SELECT * FROM Produtos"; 
+            const result = await pool.request().query(querySQL)
 
-            const result = await pool.request(). query (querySQL);
-
-            return result.recordset;
-
-        }catch (error){
-            console.error("Erro ao buscar produtos:", error);
-            throw error;
-
+            return result.recordset; 
+        } catch (error) {
+            console.error('Erro ao buscar produtos:' , error)
+            throw error   
         }
     },
-    buscarUm: async (params) => {
-        try {
-            const pool = await getConnection();
 
-            const querySQL = 'SELET * FROM Produtos WHERE idProduto = @idProduto';
+    buscarUm: async (idProduto) => {
+        try {
+            const pool = await getConnection()
+
+            const querySQL = 
+            `SELECT * FROM Produtos WHERE idProduto = @idProduto`
 
             const result = await pool.request()
-            .input('idProduto', sql.UniqueIdentifier, idProdutos)
-            .query(querySQL);
+                .input('idProduto', sql.UniqueIdentifier, idProduto)
+                .query(querySQL)
+
+            return result.recordset
         } catch (error) {
-            console.error('Erro ao buscar o produto', error);
-            throw error;
+            console.error('Erro ao buscar o produto: ', error)
+            throw error 
+        }
+    },
+
+    inserirProduto: async (nomeProduto, precoProduto) => {
+        try {
+            const pool = await getConnection() 
+
+            let querySQL = 'INSERT INTO Produtos (nomeProduto, precoProduto) VALUES (@nomeProduto, @precoProduto)';
+
+            await pool.request()
+                .input('nomeProduto', sql.VarChar(100), nomeProduto)
+                .input('precoProduto', sql.Decimal(10,2), precoProduto)
+                .query(querySQL)
+        } catch (error) {
+            console.error('Erro ao inserir produto: ', error)
+            throw error; 
         }
     },
 
     atualizarProduto: async (idProduto, nomeProduto, precoProduto) => {
         try {
-            const pool = await getConnection();
-            const querySQL = `UPDATE Produtoss SET nomeProduto = @nomeProduto, precoproduto = @precoProduto
-                              WHERE idProduto = @idProduto`;
-            
+            const pool = await getConnection()
+
+            const querySQL = `
+                UPDATE Produtos
+                SET nomeProduto = @nomeProduto,
+                    precoProduto = @precoProduto
+                WHERE idProduto = @idProduto
+            `
             await pool.request()
                 .input('nomeProduto', sql.VarChar(100), nomeProduto)
-                .input('precoProduto', sql.Decimal(10,2), precoProduto)
+                .input('precoProduto', sql.Decimal(10, 2), precoProduto)
                 .input('idProduto', sql.UniqueIdentifier, idProduto)
-                .query(querySQL);
+                .query(querySQL)
         } catch (error) {
-            console.error('Erro ao atualizar o produto:', error);
-            throw error;
+            console.error('Erro ao atualiza produto: ' , error)
+            throw error
+        }
+    },
+    deletaProduto: async (idProduto) => {
+        try {
+            const pool = await getConnection();
+            const querySQL = `
+            DELETE FROM Produtos
+            WHERE idProduto = @idProduto`
+
+            await pool.request()
+                .input("@idProduto", sql.UniqueIdentifier, idProduto)
+                .query(querySQL);
+
+        } catch (error) {
+            console.error('Erro ao deletar produto: ' , error)
+            throw error
         }
     }
+
 };
 
-module.exports = {produtoModel};
+module.exports = {
+    produtoModel
+};
