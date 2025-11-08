@@ -1,5 +1,5 @@
-const {clienteModel} = require("../models/clienteModels")
-
+const {clienteModel} = require("../models/clienteModel")
+const bcrypt = require('bcrypt');
 // nao esqueca de exportar no final usando 
 //MODULE.EXPORTS = {}
 const clienteController = {
@@ -26,45 +26,44 @@ const clienteController = {
 
     {
         "nomeCliente": "nome",
-        "cpfCliente": "12345678910"
+        "cpfCliente": "12345678900"
     }
     */
 
     criarCliente: async (req, res) => {
-        try {
-            const { nomeCliente, cpfCliente, emailCliente, senhaCliente} = req.body
+    try {
+        const { nomeCliente, cpfCliente, emailCliente, senhaCliente } = req.body;
 
-            if (nomeCliente == undefined || cpfCliente == undefined || emailCliente == undefined || senhaCliente == undefined) {
-                return res.status(400).json({
-                    erro: 'Campos obrigatorios nao preenchidos'
-                })
-            }
-            //Criptografar senha
-            const saltRounds = 10;
-
-            const senhaCriptografada = await bcrypt.hash(senhaCliente, saltRounds);
-            
-            await clienteModel.inserirCliente(nomeCliente, cpfCliente, emailCliente, senhaCriptografada);
-
-            //verificar se o cpf ja existe no DB
-            const clientes = await clienteModel.buscarPorCPF(cpfCliente)
-
-            if(clientes.length > 0) {
-                return res.status(409).json({erro: 'CPF ja cadastrado'})
-            }
-
-            await clienteModel.inserirCliente(nomeCliente, cpfCliente)
-
-            res.status(201).json({
-                message: 'cliente cadastrado com sucesso'
-            })
-        } catch (error) {
-            console.error('erro ao cadastrar cliente:', error)
-            res.status(500).json({
-                error: 'Erro ao cadastrar cliente'
-            })
+        if (!nomeCliente || !cpfCliente || !emailCliente || !senhaCliente) {
+            return res.status(400).json({
+                erro: 'Campos obrigatorios nao preenchidos'
+            });
         }
+
+        // Criptografar senha
+        const saltRounds = 10;
+        const senhaCriptografada = await bcrypt.hash(senhaCliente, saltRounds);
+
+        // Verificar se o CPF já existe
+        const clientes = await clienteModel.buscarPorCPF(cpfCliente);
+        if (clientes.length > 0) {
+            return res.status(409).json({ erro: 'CPF ja cadastrado' });
+        }
+
+        // Inserir cliente no banco
+        await clienteModel.inserirCliente(nomeCliente, cpfCliente, emailCliente, senhaCriptografada);
+
+        res.status(201).json({
+            message: 'cliente cadastrado com sucesso'
+        });
+    } catch (error) {
+        console.error('erro ao cadastrar cliente:', error);
+        res.status(500).json({
+            error: 'Erro ao cadastrar cliente'
+        });
     }
+}
+
 }
 
 //EXPORTANDO O clienteController
